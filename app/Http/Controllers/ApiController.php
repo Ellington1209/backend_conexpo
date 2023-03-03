@@ -5,25 +5,26 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\RegistersUsers;
-use App\User;
+
+use App\Models\User;
 use Validator;
 
 class ApiController extends Controller
 {
-    use RegistersUsers;
 
-    public function index (Request $Request)
+
+    public function index (Request $request)
     {
         $rules = [
             'name'        =>['required', 'string' , 'max:255'],
-            'email'       =>['required', 'string', 'email', 'max:255', 'unique:user'],
+            'email'       =>['required', 'string', 'email', 'max:255', 'unique:users'],
             'password'    =>['required', 'string', 'min:6'],
         ];
 
         $validator = Validator::make($request->all(), $rules);
 
         if($validator->fails()){
-            return response()->json(['error'=> $validator->message()], 200);
+            return response()->json(['error' => $validator->errors(),], 422);
         }else{
             $user = User::create([
                 'name'       =>$request->name,
@@ -33,9 +34,10 @@ class ApiController extends Controller
 
             if(!empty($user)){
                 return response()->json([
+                    'success'  => 200,
                     'name'     => $user->name,
                     'email'    => $user->email,
-                    'password' => $user->createToken('Token Name')->accessToken
+                    'token' => $user->createToken('Token Name')->accessToken
                 ], 200);
             }
         }
